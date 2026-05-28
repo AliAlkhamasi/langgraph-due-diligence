@@ -5,6 +5,9 @@ param prefix string = 'techdd'
 @description('Azure region (defaults to the RG location)')
 param location string = resourceGroup().location
 
+@description('Container image tag for the backend')
+param imageTag string = 'v2'
+
 // Resources — declare what should exist
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: '${prefix}-kv-${uniqueString(resourceGroup().id)}'
@@ -135,7 +138,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       containers: [
         {
           name: 'api'
-          image: '${acr.properties.loginServer}/techdd-api:v2'
+          image: '${acr.properties.loginServer}/techdd-api:${imageTag}'
           resources: {
             cpu: json('0.5')
             memory: '1.0Gi'
@@ -152,6 +155,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
               value: appInsights.properties.ConnectionString
+            }
+            {
+              name: 'ALLOWED_ORIGINS'
+              value: 'https://${staticWebApp.properties.defaultHostname}'
             }
           ]
         }

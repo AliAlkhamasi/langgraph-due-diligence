@@ -1,0 +1,39 @@
+name: Deploy infra
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/**"
+      - ".github/workflows/deploy-infra.yml"
+
+concurrency:
+  group: azure-deploy-tech-dd
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Bicep
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy with current image tag
+        shell: bash
+        run: |
+          CURRENT=$(az containerapp show \
+            -n techdd-api \
+            -g tech-dd-rg \
+            --query "properties.template.containers[0].image" \
+            -o tsv)
+          TAG=${CURRENT##*:}
+          az deployment group create \
+            -g tech-dd-rg \
+            --template-file infra/main.bicep \
+            --parameters imageTag=$TAG

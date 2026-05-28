@@ -1,0 +1,46 @@
+name: Deploy backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "src/**"
+      - "Dockerfile"
+      - "pyproject.toml"
+      - ".github/workflows/deploy-backend.yml"
+
+concurrency:
+  group: azure-deploy-tech-dd
+  cancel-in-progress: false
+
+jobs:
+  build_and_deploy:
+    name: Build, push, and deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build and push image
+        shell: bash
+        run: |
+          ACR=techddacrtdwfnynm7wsyw.azurecr.io
+          TAG=${{ github.sha }}
+          az acr login --name techddacrtdwfnynm7wsyw
+          docker build -t $ACR/techdd-api:$TAG -t $ACR/techdd-api:latest .
+          docker push $ACR/techdd-api:$TAG
+          docker push $ACR/techdd-api:latest
+
+      - name: Deploy infra with new tag
+        shell: bash
+        run: |
+          az deployment group create \
+            -g tech-dd-rg \
+            --template-file infra/main.bicep \
+            --parameters imageTag=${{ github.sha }}
