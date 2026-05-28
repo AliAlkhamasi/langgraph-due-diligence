@@ -19,3 +19,4 @@ frontend/.vite/
 *.tsbuildinfo
 frontend/vite.config.d.ts
 frontend/vite.config.js
+infra/main.json

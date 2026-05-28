@@ -1,0 +1,12 @@
+frontend/
+venv/
+.venv/
+__pycache__/
+*.pyc
+.git/
+.cache/
+reports/
+.env
+docs/
+scripts/
+*.md

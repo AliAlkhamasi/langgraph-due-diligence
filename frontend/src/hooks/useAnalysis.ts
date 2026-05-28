@@ -13,6 +13,8 @@ import {
   Veto,
 } from "../types/events";
 
+const API_BASE = import.meta.env.VITE_API_BASE ?? "";
+
 type TeamScores = {
   scores: Record<string, number>;
   overallScore: number;
@@ -163,7 +165,7 @@ export function useAnalysis(repoUrl: string | null): {
 
     (async () => {
       try {
-        const res = await fetch("/analyze", {
+        const res = await fetch(`${API_BASE}/analyze`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ repo_url: repoUrl }),
@@ -175,7 +177,7 @@ export function useAnalysis(repoUrl: string | null): {
 
         dispatch({ type: "started", analysisId: analysis_id, repoUrl });
 
-        eventSource = new EventSource(`/analyze/${analysis_id}/stream`);
+        eventSource = new EventSource(`${API_BASE}/analyze/${analysis_id}/stream`);
         eventSource.onmessage = (e) => {
           try {
             const event = JSON.parse(e.data) as AgentEvent;
