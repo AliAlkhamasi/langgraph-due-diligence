@@ -234,3 +234,15 @@ Per analysis (Claude Haiku 4.5):
 Switch to Sonnet by passing `model="claude-sonnet-4-6"` to `get_llm()` in any
 agent — slower and ~3x cost, useful when validating prompt changes.
 
+## Deployment
+
+Deployed to Azure as Bicep IaC, with three GitHub Actions pipelines:
+
+- **Backend** — FastAPI on Container Apps. Image pulled from ACR and secrets (Anthropic + GitHub tokens) read from Key Vault, both via a user-assigned managed identity — no keys in env vars. Application Insights wired for traces.
+- **Frontend** — Vite build on Static Web Apps, `VITE_API_BASE` injected at build time.
+- **CI/CD** — `backend/**` rebuilds the image and rolls the Container App, `frontend/**` redeploys the SWA, `infra/**` runs `az deployment group create`. All infrastructure lives in `infra/main.bicep`.
+
+![Azure resources](docs/p3.png)
+
+Infra is currently torn down to free credits and avoid token costs from the public analyze endpoint. Redeploy via `az group create` + the `infra/**` pipeline, then the `backend/**` pipeline to build and ship the image.
+
